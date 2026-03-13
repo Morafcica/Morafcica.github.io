@@ -2,10 +2,88 @@
 <html lang="sk">
 <head>
   <meta charset="utf-8" />
-  <title>morca.me</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>morca.me — padajúce smajlíky</title>
+  <style>
+    body{margin:0;height:100vh;overflow:hidden;background:#0b1220;color:#fff;font-family:system-ui,Segoe UI,Roboto,Arial}
+    .emoji{position:absolute;font-size:28px;pointer-events:none;will-change:transform,opacity}
+  </style>
 </head>
 <body>
-  <h1>Ahoj, toto je morca.me</h1>
-  <p>Jednoduchá stránka hostovaná cez GitHub Pages.</p>
+<script>
+  const emojis = ['😀','😎','😄','😍','🥳','😺','🤩','😇','😉','😂'];
+  const gravity = 1.2; // rýchlosť pádu
+  const spawnInterval = 300; // ms medzi vytvorením nového smajlíka
+  const lifetime = 8000; // ms po ktorých smajlík zmizne
+
+  function rand(min,max){ return Math.random()*(max-min)+min; }
+
+  function spawnEmoji(){
+    const el = document.createElement('div');
+    el.className = 'emoji';
+    el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    // náhodná počiatočná pozícia (x v % šírky, y nad obrazovkou)
+    const x = rand(0,100);
+    const startY = -10; // percentalne nad obrazovkou
+    el.style.left = x + 'vw';
+    el.style.top = startY + 'vh';
+    el.style.fontSize = rand(20,48) + 'px';
+    el.style.opacity = '1';
+    document.body.appendChild(el);
+
+    // fyzika jednoduchá: rýchlosť a drobné horizontálne kývanie
+    let vy = rand(0.5,2.5);
+    let vx = rand(-0.4,0.4);
+    const rotateSpeed = rand(-0.5,0.5);
+
+    const born = Date.now();
+    function frame(){
+      const elapsed = Date.now() - born;
+      // prepočet pozície v px podľa viewportu
+      const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+      const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+
+      // inkrement rýchlosti
+      vy += gravity * 0.02;
+      // aktualizuj pozíciu (v percentách pre left/top)
+      const curLeftPx = parseFloat(el.style.left) / 100 * vw;
+      const curTopPx = parseFloat(el.style.top) / 100 * vh;
+      const newLeftPx = curLeftPx + vx * (vw/100);
+      const newTopPx = curTopPx + vy * (vh/100) * 0.02;
+
+      el.style.left = (newLeftPx / vw * 100) + 'vw';
+      el.style.top = (newTopPx / vh * 100) + 'vh';
+      el.style.transform = `rotate(${elapsed * rotateSpeed * 0.1}deg)`;
+
+      // horizontálne odraziť pri okrajoch
+      if(newLeftPx < 0 || newLeftPx > vw - el.offsetWidth){
+        vx = -vx * 0.6;
+      }
+
+      // ak dole alebo po lifetime — zmizni
+      if(newTopPx > vh + 50 || elapsed > lifetime){
+        el.style.transition = 'opacity 600ms';
+        el.style.opacity = '0';
+        setTimeout(()=>el.remove(),700);
+        return;
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // spawn v intervale
+  const spawnTimer = setInterval(spawnEmoji, spawnInterval);
+
+  // pridať pár naraz pri kliknutí
+  window.addEventListener('click', (e)=>{
+    for(let i=0;i<6;i++){
+      setTimeout(spawnEmoji, i*60);
+    }
+  });
+
+  // prerušiteľné: zastaviť spawn po 60s
+  // setTimeout(()=>clearInterval(spawnTimer), 60000);
+</script>
 </body>
 </html>
