@@ -18,17 +18,14 @@
       position:fixed;right:16px;top:12px;background:rgba(0,0,0,0.4);padding:8px 12px;border-radius:10px;
       font-weight:700;font-size:16px;
     }
-    #lives{position:fixed;left:16px;top:12px;background:rgba(0,0,0,0.4);padding:8px 12px;border-radius:10px;font-weight:700}
-    .heart{color:#ff6b6b;margin-left:6px}
   </style>
 </head>
 <body>
 <div id="score">Score: 0</div>
-<div id="lives">Lives: <span id="livesCount">5</span> <span class="heart">❤</span></div>
 <div id="basket">🧺</div>
 
 <script>
-  const emojis = [ /* tvoje emoji pole (skrátil som pre prehľadnosť) */
+  const emojis = [
     '🌩','🛩','🪐','🦚','🧿','🦄','🪲','🧸','🦕','🪁','🤹','🧩','🛡','🥽','🧪','🧬','🛴','🪄','🦥','🦦',
     '🍥','🥮','🧁','🫐','🥑','🍣','🍜','🍩','🍪','🍰','☕','🥤','🍺','🍷','🥂','🧋','🍭','🍬','🍫','🍯',
     '😀','😁','😂','🤣','😃','😄','😅','😆','😉','😊','🙂','🙃','😇','😍','😘','😗','😙','😚','😋','😛',
@@ -44,14 +41,10 @@
 
   function rand(min,max){ return Math.random()*(max-min)+min; }
 
-  // Stav hry
   let score = 0;
-  let lives = 5;
   const scoreEl = document.getElementById('score');
-  const livesEl = document.getElementById('livesCount');
   const basket = document.getElementById('basket');
 
-  // Basket ovládanie
   let basketX = window.innerWidth/2;
   const basketW = 180;
   function updateBasketPos(){
@@ -59,19 +52,16 @@
   }
   updateBasketPos();
 
-  // Ovládanie myšou
   window.addEventListener('mousemove', (e)=>{
     basketX = e.clientX;
     updateBasketPos();
   });
-  // Ovládanie klávesami
   const speed = 18;
   window.addEventListener('keydown', (e)=>{
     if(e.key === 'ArrowLeft' || e.key === 'a') { basketX -= speed; updateBasketPos(); }
     if(e.key === 'ArrowRight' || e.key === 'd') { basketX += speed; updateBasketPos(); }
   });
 
-  // zvuk pri chytení (krátky bleep)
   const catchSound = new Audio('data:audio/wav;base64,UklGRhQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=');
   catchSound.volume = 0.15;
 
@@ -100,26 +90,17 @@
       const newTopPx = curTopPx + vy * (vh/100) * 0.02;
       el.style.left = (newLeftPx / vw * 100) + 'vw';
       el.style.top = (newTopPx / vh * 100) + 'vh';
-      // collision s basket (px koordinaty)
       const elRect = el.getBoundingClientRect();
       const basketRect = basket.getBoundingClientRect();
-      // keď emoji v dosahu košíka (y blízko spodku) a x sa prekryje
       if(elRect.bottom >= basketRect.top + 6 && elRect.left < basketRect.right && elRect.right > basketRect.left){
-        // chytené
         score += Math.max(1, Math.floor(60/parseFloat(el.style.fontSize)));
         scoreEl.textContent = 'Score: ' + score;
         catchSound.currentTime = 0; catchSound.play().catch(()=>{});
         el.remove();
         return;
       }
-      // ak spadne pod obrazovku — strata života
       if(newTopPx > vh + 50 || elapsed > lifetime){
         el.remove();
-        lives -= 1;
-        livesEl.textContent = lives;
-        if(lives <= 0){
-          gameOver();
-        }
         return;
       }
       requestAnimationFrame(frame);
@@ -127,40 +108,13 @@
     requestAnimationFrame(frame);
   }
 
-  const spawnTimer = setInterval(spawnEmoji, spawnInterval);
+  setInterval(spawnEmoji, spawnInterval);
 
-  function gameOver(){
-    clearInterval(spawnTimer);
-    const over = document.createElement('div');
-    over.style.position='fixed';over.style.left=0;over.style.top=0;over.style.width='100%';over.style.height='100%';
-    over.style.display='flex';over.style.alignItems='center';over.style.justifyContent='center';
-    over.style.background='linear-gradient(90deg, rgba(11,18,32,0.85), rgba(11,18,32,0.95))';
-    over.style.zIndex=9999; over.innerHTML = `
-      <div style="text-align:center;color:#fff;font-family:system-ui;padding:24px;border-radius:12px">
-        <h1 style="margin:0 0 12px">Game Over</h1>
-        <p style="margin:0 0 18px">Score: ${score}</p>
-        <button id="retry" style="padding:8px 14px;font-size:16px;border-radius:8px;border:none;cursor:pointer">Retry</button>
-      </div>
-    `;
-    document.body.appendChild(over);
-    document.getElementById('retry').addEventListener('click', ()=>{
-      over.remove();
-      score = 0; lives = 1000; scoreEl.textContent='Score: 0'; livesEl.textContent='5';
-      // znovu spusti spawn (nový timer)
-      setInterval(spawnEmoji, spawnInterval);
-    });
-  }
-
-  // klikni na košík, presuň ho na kliknutie
   window.addEventListener('click', (e)=>{
-    // ak klik nie je na button retry (game over), presuň basket
-    if(e.target.id !== 'retry'){
-      basketX = e.clientX;
-      updateBasketPos();
-    }
+    basketX = e.clientX;
+    updateBasketPos();
   });
 
-  // uprav pri resize
   window.addEventListener('resize', ()=> updateBasketPos());
 </script>
 </body>
