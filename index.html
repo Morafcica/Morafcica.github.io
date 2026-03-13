@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>morca.me — padajúce smajlíky</title>
+  <title>HALLO</title>
   <style>
     body{margin:0;height:100vh;overflow:hidden;background:#0b1220;color:#fff;font-family:system-ui,Segoe UI,Roboto,Arial}
     .emoji{position:absolute;font-size:28px;pointer-events:none;will-change:transform,opacity}
@@ -11,10 +11,23 @@
 </head>
 <body>
 <script>
-  const emojis = ['😀','😎','😄','😍','🥳','😺','🤩','😇','😉','😂','🤓',''🤮'','🤧','💀','💩','🐮','🐷','🐗'];
-  const gravity = 1.2; // rýchlosť pádu
-  const spawnInterval = 300; // ms medzi vytvorením nového smajlíka
-  const lifetime = 8000; // ms po ktorých smajlík zmizne
+  const emojis = [
+		'🌩','🛩','🪐','🦚','🧿','🦄','🪲','🧸','🦕','🪁','🤹','🧩','🛡','🥽','🧪','🧬','🛴','🪄','🦥','🦦',
+		'🍥','🥮','🧁','🫐','🥑','🍣','🍜','🍩','🍪','🍰','☕','🥤','🍺','🍷','🥂','🧋','🍭','🍬','🍫','🍯',
+		'😀','😁','😂','🤣','😃','😄','😅','😆','😉','😊','🙂','🙃','😇','😍','😘','😗','😙','😚','😋','😛',
+		'😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😴',
+		'😪','😵','🤯','🤠','🥳','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨',
+		'😰','😥','😢','😭','😱','😖','😣','😞','😩','😫','😤','😡','😠','🤬','😷','🤒','🤕','🤢','🤮','🤧',
+		'💀','☠️','👻','🤖','🎃','👽','🛸','🦾','🦿','🦾','🧠','🫀','🫁','🦴','🦷','🩷','🩸','🫧','🧨','💣',
+		'💡','🔦','🏮','🪔','🕯','📯','📣','🔔','🎵','🎶','🎧','🎷','🎺','🎸','🎹','🥁','🎻','🎬','📺','📻',
+		'📱','☎️','📞','💻','🖥','🖨','🕹','🎮','🧭','🗺','🔭','🔬','📡','💳','🧾','📦','🧳','✈️','🚀','🛸',
+		'🚗','🚕','🚙','🚌','🚎','🏎','🚓','🚑','🚒','🚐','🚚','🚛','🚜','🛺','🚲','🛵','🏍','🛻','🚨','🚁',
+		'🌞','🌝','🌛','🌜','🌕','🌖','🌗','🌘','⭐','🌟','💫','✨','🔥','💥','❄️','🌊','☁️','⚡','🌪️','🌈',
+		'🌸','🌼','🌻','🌺','🌹','🥀','🌵','🎄','🌳','🌲','🌱','🌿','🍀','🍁','🍂','🍃','🌾','☘️','🍄','🌰'
+		];
+  const gravity = 2.3; // rýchlosť pádu
+  const spawnInterval = 80; // ms medzi vytvorením nového smajlíka
+  const lifetime = 10000; // ms po ktorých smajlík zmizne
 
   function rand(min,max){ return Math.random()*(max-min)+min; }
 
@@ -87,4 +100,3 @@
 </script>
 </body>
 </html>
-
