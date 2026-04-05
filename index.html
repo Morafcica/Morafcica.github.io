@@ -1,121 +1,44 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>HALLO</title>
-  <style>
-    body{margin:0;height:100vh;overflow:hidden;background:#0b1220;color:#fff;font-family:system-ui,Segoe UI,Roboto,Arial;user-select:none}
-    .emoji{position:absolute;font-size:28px;pointer-events:none;will-change:transform,opacity}
-    /* košík */
-    #basket{
-      position:fixed;left:50%;transform:translateX(-50%);bottom:12px;
-      width:180px;height:54px;border-radius:28px;background:rgba(255,255,255,0.08);
-      display:flex;align-items:center;justify-content:center;font-size:24px;
-      box-shadow:0 6px 18px rgba(0,0,0,0.5);backdrop-filter:blur(4px);
-    }
-    #score{
-      position:fixed;right:16px;top:12px;background:rgba(0,0,0,0.4);padding:8px 12px;border-radius:10px;
-      font-weight:700;font-size:16px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Moja .me stránka</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        
+        #cislo-display { 
+            font-size: 10rem; 
+            color: #007bff; 
+        }
+    </style>
 </head>
 <body>
-<div id="score">Score: 0</div>
-<div id="basket">🧺</div>
 
-<script>
-  const emojis = [
-    '🌩','🛩','🪐','🦚','🧿','🦄','🪲','🧸','🦕','🪁','🤹','🧩','🛡','🥽','🧪','🧬','🛴','🪄','🦥','🦦',
-    '🍥','🥮','🧁','🫐','🥑','🍣','🍜','🍩','🍪','🍰','☕','🥤','🍺','🍷','🥂','🧋','🍭','🍬','🍫','🍯',
-    '😀','😁','😂','🤣','😃','😄','😅','😆','😉','😊','🙂','🙃','😇','😍','😘','😗','😙','😚','😋','😛',
-    '😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😴',
-    '😪','😵','🤯','🤠','🥳','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨',
-    '😰','😥','😢','😭','😱','😖','😣','😞','😩','😫','😤','😡','😠','🤬','😷','🤒','🤕','🤢','🤮','🤧',
-    '💀','☠️','👻','🤖','🎃','👽','🛸','🦾','🦿','🦾','🧠','🫀','🫁','🦴','🦷','🩷','🩸','🫧','🧨','💣',
-    '💡','🔦','🏮','🪔','🕯','📯','📣','🔔','🎵','🎶','🎧','🎷','🎺','🎸','🎹','🥁','🎻','🎬','📺','📻'
-  ];
-  const gravity = 2.3;
-  const spawnInterval = 120;
-  const lifetime = 10000;
+    <div id="cislo-display">Načítavam...</div>
 
-  function rand(min,max){ return Math.random()*(max-min)+min; }
+    <script>
+        const url = "https://moj-projekt-4ec4a-default-rtdb.europe-west1.firebasedatabase.app/.json";
 
-  let score = 0;
-  const scoreEl = document.getElementById('score');
-  const basket = document.getElementById('basket');
+        function obnovCislo() {
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.aktualne_cislo) {
+                        document.getElementById('cislo-display').innerText = data.aktualne_cislo;
+                    }
+                })
+                .catch(error => console.error('Chyba:', error));
+        }
 
-  let basketX = window.innerWidth/2;
-  const basketW = 180;
-  function updateBasketPos(){
-    basket.style.left = Math.max(10, Math.min(window.innerWidth - basketW - 10, basketX - basketW/2)) + 'px';
-  }
-  updateBasketPos();
-
-  window.addEventListener('mousemove', (e)=>{
-    basketX = e.clientX;
-    updateBasketPos();
-  });
-  const speed = 18;
-  window.addEventListener('keydown', (e)=>{
-    if(e.key === 'ArrowLeft' || e.key === 'a') { basketX -= speed; updateBasketPos(); }
-    if(e.key === 'ArrowRight' || e.key === 'd') { basketX += speed; updateBasketPos(); }
-  });
-
-  const catchSound = new Audio('data:audio/wav;base64,UklGRhQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=');
-  catchSound.volume = 0.15;
-
-  function spawnEmoji(){
-    const el = document.createElement('div');
-    el.className = 'emoji';
-    el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
-    const x = rand(0,100);
-    el.style.left = x + 'vw';
-    el.style.top = -8 + 'vh';
-    el.style.fontSize = rand(20,56) + 'px';
-    el.style.opacity = '1';
-    document.body.appendChild(el);
-
-    let vy = rand(0.5,2.5);
-    let vx = rand(-0.6,0.6);
-    const born = Date.now();
-    function frame(){
-      const elapsed = Date.now() - born;
-      const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-      const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
-      vy += gravity * 0.02;
-      const curLeftPx = parseFloat(el.style.left) / 100 * vw;
-      const curTopPx = parseFloat(el.style.top) / 100 * vh;
-      const newLeftPx = curLeftPx + vx * (vw/100);
-      const newTopPx = curTopPx + vy * (vh/100) * 0.02;
-      el.style.left = (newLeftPx / vw * 100) + 'vw';
-      el.style.top = (newTopPx / vh * 100) + 'vh';
-      const elRect = el.getBoundingClientRect();
-      const basketRect = basket.getBoundingClientRect();
-      if(elRect.bottom >= basketRect.top + 6 && elRect.left < basketRect.right && elRect.right > basketRect.left){
-        score += Math.max(1, Math.floor(60/parseFloat(el.style.fontSize)));
-        scoreEl.textContent = 'Score: ' + score;
-        catchSound.currentTime = 0; catchSound.play().catch(()=>{});
-        el.remove();
-        return;
-      }
-      if(newTopPx > vh + 50 || elapsed > lifetime){
-        el.remove();
-        return;
-      }
-      requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
-  }
-
-  setInterval(spawnEmoji, spawnInterval);
-
-  window.addEventListener('click', (e)=>{
-    basketX = e.clientX;
-    updateBasketPos();
-  });
-
-  window.addEventListener('resize', ()=> updateBasketPos());
-</script>
+        setInterval(obnovCislo, 2000);
+        obnovCislo();
+    </script>
 </body>
 </html>
