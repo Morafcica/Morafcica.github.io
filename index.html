@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Kvetocraft</title>
-	<link rel="icon" href="https://cdn-icons-png.flaticon.com/128/2926/2926754.png" type="image/png">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/128/2926/2926754.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
-        *{
+        * {
             box-sizing: border-box;
         }
 
@@ -116,10 +116,14 @@
             text-align: center;
         }
 
+        .chart-box {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
         canvas {
             image-rendering: auto;
-            max-height: 300px;
-            width: 100% !important;
         }
 
     </style>
@@ -153,116 +157,103 @@
     <div class="graphs-wrapper">
         <div class="graph-container">
             <div class="graph-title">TEPLOTA V CASE</div>
-            <canvas id="tempChart"></canvas>
+            <div class="chart-box">
+                <canvas id="tempChart"></canvas>
+            </div>
         </div>
 
         <div class="graph-container">
             <div class="graph-title">VLHKOST V CASE</div>
-            <canvas id="humidityChart"></canvas>
+            <div class="chart-box">
+                <canvas id="humidityChart"></canvas>
+            </div>
         </div>
     </div>
 
     <script>
-		const urlLatest = "https://moj-projekt-4ec4a-default-rtdb.europe-west1.firebasedatabase.app/sensors/latest.json";
-		const urlGraphs = {
-			temp: "https://moj-projekt-4ec4a-default-rtdb.europe-west1.firebasedatabase.app/sensors/graph.json",
-			humidity: "https://moj-projekt-4ec4a-default-rtdb.europe-west1.firebasedatabase.app/sensors/graph_air.json"
-		};
-		
-		let charts = {};
+        const urlLatest = "https://moj-projekt-4ec4a-default-rtdb.europe-west1.firebasedatabase.app/sensors/latest.json";
+        const urlGraphs = {
+            temp: "https://moj-projekt-4ec4a-default-rtdb.europe-west1.firebasedatabase.app/sensors/graph.json",
+            humidity: "https://moj-projekt-4ec4a-default-rtdb.europe-west1.firebasedatabase.app/sensors/graph_air.json"
+        };
+        
+        let charts = {};
 
-		function obnovUdaje() {
-			fetch(urlLatest)
-				.then(response => response.json())
-				.then(data => {
+        function obnovUdaje() {
+            fetch(urlLatest)
+                .then(response => response.json())
+                .then(data => {
+                    if (data) {
+                        if (data.air_temp_c !== undefined) document.getElementById('temp-display').innerText = data.air_temp_c;
+                        if (data.air_humidity_percent !== undefined) document.getElementById('humidity-display').innerText = data.air_humidity_percent;
+                        if (data.timestamp !== undefined) document.getElementById('timestamp').innerText = data.timestamp;
 
-					if (data) {
-						if (data.air_temp_c !== undefined) document.getElementById('temp-display').innerText = data.air_temp_c;
-						if (data.air_humidity_percent !== undefined) document.getElementById('humidity-display').innerText = data.air_humidity_percent;
-						if (data.timestamp !== undefined) document.getElementById('timestamp').innerText = data.timestamp;
+                        const statusEl = document.getElementById('sensor-status');
+                        if (skontrolujCas(data.timestamp)) {
+                            statusEl.innerText = 'OK';
+                            statusEl.style.color = '#00AA00';
+                        } else {
+                            statusEl.innerText = 'NOK';
+                            statusEl.style.color = '#AA0000';
+                        }
+                    }
+                })
+                .catch(error => console.error('CHYBA:', error));
+        }
 
-						const statusEl = document.getElementById('sensor-status');
-						if (skontrolujCas(data.timestamp)) {
-							statusEl.innerText = 'OK';
-							statusEl.style.color = '#00AA00';
-						} else {
-							statusEl.innerText = 'NOK';
-							statusEl.style.color = '#AA0000';
-						}
-					}
-				})
-				.catch(error => console.error('CHYBA PRI SŤAHOVANÍ:', error));
-		}
+        function skontrolujCas(ts) {
+            if (!ts) return false;
+            try {
+                const castaMien = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+                const parts = ts.split(' ');
+                const datePart = parts[0].split('.');
+                const timePart = parts[1].split(':');
+                const den = parseInt(datePart[0]);
+                const mesiac = datePart[1].toLowerCase();
+                const mesiacIndex = castaMien.indexOf(mesiac);
+                const hodina = parseInt(timePart[0]);
+                const minuta = parseInt(timePart[1]);
+                const teraz = new Date();
+                const poslednyUpdate = new Date(teraz.getFullYear(), mesiacIndex, den, hodina, minuta);
+                return (Math.abs(teraz - poslednyUpdate) / 60000) <= 30;
+            } catch(e) { return false; }
+        }
 
-		function skontrolujCas(ts) {
-			if (!ts) return false;
-			try {
-				const castaMien = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
-				
-				const parts = ts.split(' ');
-				const datePart = parts[0].split('.');
-				const timePart = parts[1].split(':');
+        function obnovGraf(typ, url, chartId, label, borderColor) {
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if(!data) return;
+                    const labels = Object.keys(data).sort((a, b) => parseInt(a) - parseInt(b));
+                    const values = labels.map(key => data[key]);
+                    const ctx = document.getElementById(chartId).getContext('2d');
+                    
+                    charts[typ] = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: label,
+                                data: values,
+                                borderColor: borderColor,
+                                backgroundColor: `${borderColor}30`,
+                                fill: true,
+                                tension: 0.3
+                            }]
+                        },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false,
+                            animation: true
+                        }
+                    });
+                });
+        }
 
-				const den = parseInt(datePart[0]);
-				const mesiac = datePart[1].toLowerCase();
-				const mesiacIndex = castaMien.indexOf(mesiac);
-				const hodina = parseInt(timePart[0]);
-				const minuta = parseInt(timePart[1]);
+        obnovUdaje();
+        obnovGraf('temp', urlGraphs.temp, 'tempChart', 'Teplota', '#AA0000');
+        obnovGraf('humidity', urlGraphs.humidity, 'humidityChart', 'Vlhkosť', '#00AAAA');
 
-				const teraz = new Date();
-				const poslednyUpdate = new Date(teraz.getFullYear(), mesiacIndex, den, hodina, minuta);
-				
-				const rozdielMinut = Math.abs(teraz - poslednyUpdate) / (1000 * 60);
-				console.log("Rozdiel v minútach:", rozdielMinut);
-				
-				return rozdielMinut <= 30; 
-			} catch(e) {
-				return false;
-			}
-		}
-
-		function obnovGraf(typ, url, chartId, label, borderColor) {
-			fetch(url)
-				.then(response => response.json())
-				.then(data => {
-					if(!data) return;
-					const labels = Object.keys(data).sort((a, b) => parseInt(a) - parseInt(b));
-					const values = labels.map(key => data[key]);
-					const ctx = document.getElementById(chartId).getContext('2d');
-					
-					if (charts[typ]) {
-						charts[typ].data.labels = labels;
-						charts[typ].data.datasets[0].data = values;
-						charts[typ].update();
-					} else {
-						charts[typ] = new Chart(ctx, {
-							type: 'line',
-							data: {
-								labels: labels,
-								datasets: [{
-									label: label,
-									data: values,
-									borderColor: borderColor,
-									backgroundColor: `${borderColor}30`,
-									fill: true,
-									tension: 0.3
-								}]
-							},
-							options: { responsive: true, maintainAspectRatio: false }
-						});
-					}
-				});
-		}
-
-		obnovUdaje();
-		obnovGraf('temp', urlGraphs.temp, 'tempChart', 'Teplota', '#AA0000');
-		obnovGraf('humidity', urlGraphs.humidity, 'humidityChart', 'Vlhkosť', '#00AAAA');
-
-		setInterval(obnovUdaje, 5000000);
-		setInterval(() => {
-			obnovGraf('temp', urlGraphs.temp, 'tempChart', 'Teplota', '#AA0000');
-			obnovGraf('humidity', urlGraphs.humidity, 'humidityChart', 'Vlhkosť', '#00AAAA');
-		}, 3000000000);
-	</script>
+    </script>
 </body>
 </html>
